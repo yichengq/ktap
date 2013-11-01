@@ -296,6 +296,8 @@ static int precall(ktap_state *ks, StkId func, int nresults)
 {
 	ktap_cfunction f;
 	ktap_callinfo *ci;
+	ktap_cdata *cf;
+	csymbol *cs;
 	ktap_proto *p;
 	StkId base;
 	ptrdiff_t funcr = savestack(ks, func);
@@ -339,6 +341,29 @@ static int precall(ktap_state *ks, StkId func, int nresults)
 		ci->callstatus = CIST_KTAP;
 		ks->top = ci->top;
 		return 0;
+	case KTAP_CDATA:
+		cf = cdvalue(func);
+		if (cf->type != KTAP_CDFUNC)
+			kp_error(ks, "ctype is not a c funcion\n");
+
+		if (checkstack(ks, KTAP_MIN_RESERVED_STACK_SIZE))
+			return 1;
+
+		cs = cd_getfsym(cf);
+		kp_verbose_printf(ks, "calling function [%s] with address %p\n",
+				csym_name(cs), csym_getf(cs).addr);
+
+		ci = next_ci(ks);
+		ci->nresults = nresults;
+		ci->func = restorestack(ks, funcr);
+		ci->top = ks->top + KTAP_MIN_RESERVED_STACK_SIZE;
+		ci->callstatus = 0;
+
+		kp_ffi_call(ks, &csym_getf(cs));
+		kp_verbose_printf(ks, "returned from ffi call...\n");
+		n = (csym_getf(cs).ret_type == KTAP_CDVOID) ? 0 : 1;
+		poscall(ks, ks->top - n);
+		return 1;
 	default:
 		kp_error(ks, "attempt to call nil function\n");
 	}
@@ -646,7 +671,7 @@ static void ktap_execute(ktap_state *ks)
 		else {
 			int aux;
 
-			/* 
+			/*
 			 * tail call: put called frame (n) in place of
 			 * caller one (o)
 			 */
@@ -827,7 +852,7 @@ static void ktap_execute(ktap_state *ks)
 			return;
 		}
 
-		kp_event_getarg(ks, ra, GETARG_B(instr));		
+		kp_event_getarg(ks, ra, GETARG_B(instr));
 		break;
 	case OP_LOAD_GLOBAL: {
 		ktap_value *cfunc = cfunction_cache_get(ks, GETARG_C(instr));
@@ -1277,6 +1302,7 @@ void kp_final_exit(ktap_state *ks)
 	kp_probe_exit(ks);
 
 	/* free all resources got by ktap */
+	kp_ffi_free_symbol(ks);
 	kp_tstring_freeall(ks);
 	kp_free_all_gcobject(ks);
 	cfunction_cache_exit(ks);
@@ -1374,6 +1400,7 @@ ktap_state *kp_newstate(ktap_parm *parm, struct dentry *dir)
 	kp_init_kdebuglib(ks);
 	kp_init_timerlib(ks);
 	kp_init_ansilib(ks);
+	kp_init_ffilib(ks);
 
 	if (alloc_kp_percpu_data())
 		goto out;

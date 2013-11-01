@@ -1,0 +1,40 @@
+# this need to be synchronized with C header
+KTAP_CDVOID = 0
+KTAP_CDCHAR = 1
+KTAP_CDUCHAR = 2
+KTAP_CDUSHORT = 3
+KTAP_CDSHORT = 4
+KTAP_CDUINT = 5
+KTAP_CDINT = 6
+KTAP_CDULONG = 7
+KTAP_CDLONG = 8
+KTAP_CDULLONG = 9
+KTAP_CDLLONG = 10
+KTAP_CDPTR = 11
+KTAP_CDFUNC = 12
+KTAP_CDUNKNOWN = 13
+
+
+C.cdef["sched_clock"] = {}
+C.cdef["sched_clock"]["addr"] = `sched_clock`
+C.cdef["sched_clock"]["type"] = KTAP_CDFUNC
+C.cdef["sched_clock"][1] = KTAP_CDULLONG
+
+#C.cdef["ktest_int_int"] = {}
+#C.cdef["ktest_int_int"]["type"] = KTAP_CDFUNC
+#C.cdef["ktest_int_int"]["addr"] = `ktest_int_int`
+#C.cdef["ktest_int_int"][1] = KTAP_CDINT
+#C.cdef["ktest_int_int"][2] = KTAP_CDINT
+#C.cdef["ktest_int_int"][3] = KTAP_CDINT
+
+ffi.load_sym()
+
+# end of cdef header
+
+
+print("start of user script...")
+
+print("[*] try a registered C function...")
+#ret = C.ktest_int_int(1337, 1337)
+ret = C.sched_clock()
+print("C function returned, value: ", ret)

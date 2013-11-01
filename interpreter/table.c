@@ -466,7 +466,7 @@ static int computesizes (int nums[], int *narray)
 			if (a > twotoi/2) {
 				/* optimal size (till now) */
 				n = twotoi;
-				/* 
+				/*
 				 * all elements smaller than n will go to
 				 * array part
 				 */
@@ -658,7 +658,7 @@ static void table_resize(ktap_state *ks, ktap_table *t, int nasize, int nhsize)
 			 * already present in the table
 			 */
 			set_obj(v, gval(old));
-			
+
 			if (t->with_stats) {
 				ktap_stat_data *sd;
 
@@ -952,9 +952,24 @@ int kp_table_length(ktap_state *ks, ktap_table *t)
 
 		len++;
 	}
-	
+
 	kp_table_unlock(t);
 	return len;
+}
+
+int kp_table_sizenode(ktap_state *ks, ktap_table *t)
+{
+	return sizenode(t);
+}
+
+ktap_value *kp_table_node_gkey(ktap_tnode *n)
+{
+	return gkey(n);
+}
+
+ktap_value *kp_table_node_gval(ktap_tnode *n)
+{
+	return gval(n);
 }
 
 void kp_table_free(ktap_state *ks, ktap_table *t)

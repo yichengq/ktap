@@ -11,14 +11,18 @@ INC = include
 INTP = interpreter
 
 LIBDIR = $(INTP)/library
+FFIDIR = $(INTP)/ffi
 
 LIB_OBJS += $(LIBDIR)/baselib.o $(LIBDIR)/kdebug.o $(LIBDIR)/timer.o \
-		$(LIBDIR)/ansilib.o
+		$(LIBDIR)/ansilib.o $(LIBDIR)/ffi.o
+
+FFI_OBJS += $(FFIDIR)/ffi_call.o $(FFIDIR)/ffi_type.o $(FFIDIR)/ffi_symbol.o \
+	    $(FFIDIR)/call_x86_64.o
 
 INTP_OBJS += $(INTP)/ktap.o $(INTP)/loader.o $(INTP)/object.o \
 		$(INTP)/tstring.o $(INTP)/table.o $(INTP)/vm.o \
 		$(INTP)/opcode.o $(INTP)/strfmt.o $(INTP)/transport.o \
-		$(LIB_OBJS)
+		$(LIB_OBJS) $(FFI_OBJS)
 
 obj-m		+= ktapvm.o
 ktapvm-y	:= $(INTP_OBJS)

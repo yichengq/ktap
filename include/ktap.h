@@ -54,11 +54,17 @@ void kp_optimize_code(ktap_state *ks, int level, ktap_proto *f);
 void kp_register_lib(ktap_state *ks, const char *libname, const ktap_Reg *funcs);
 void *kp_percpu_data(int type);
 
+void kp_ffi_call(ktap_state *ks, csymbol_func *cf);
+void kp_ffi_free_symbol(ktap_state *ks);
+void setup_kp_ffi_symbol_table(ktap_state *ks);
+void ffi_load_sym(ktap_state *ks);
+
 void kp_init_baselib(ktap_state *ks);
 void kp_init_oslib(ktap_state *ks);
 void kp_init_kdebuglib(ktap_state *ks);
 void kp_init_timerlib(ktap_state *ks);
 void kp_init_ansilib(ktap_state *ks);
+void kp_init_ffilib(ktap_state *ks);
 
 int kp_probe_init(ktap_state *ks);
 void kp_probe_exit(ktap_state *ks);
