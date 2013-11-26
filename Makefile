@@ -15,6 +15,8 @@ all: mod ktap
 INC = include
 INTP = interpreter
 
+
+FFIDIR = $(INTP)/ffi
 KTAP_LIBS = -lpthread
 
 LIB_OBJS += $(INTP)/lib_base.o $(INTP)/lib_kdebug.o $(INTP)/lib_timer.o \
@@ -24,6 +26,14 @@ INTP_OBJS += $(INTP)/ktap.o $(INTP)/kp_load.o $(INTP)/kp_obj.o \
 		$(INTP)/kp_str.o $(INTP)/kp_tab.o $(INTP)/kp_vm.o \
 		$(INTP)/kp_opcode.o $(INTP)/kp_transport.o \
 		$(LIB_OBJS)
+
+ifdef FFI
+FFI_OBJS += $(FFIDIR)/ffi_call.o $(FFIDIR)/ffi_type.o $(FFIDIR)/ffi_symbol.o \
+    $(FFIDIR)/call_x86_64.o $(FFIDIR)/cdata.o $(FFIDIR)/ffi_util.o
+INTP_OBJS += $(FFI_OBJS)
+LIB_OBJS += $(INTP)/lib_ffi.o
+ccflags-y	+= -DCONFIG_KTAP_FFI
+endif
 
 obj-m		+= ktapvm.o
 ktapvm-y	:= $(INTP_OBJS)
@@ -38,6 +48,7 @@ modules_install:
 	$(MAKE) -C $(KERNEL_SRC) M=$(PWD) modules_install
 
 KTAPC_CFLAGS = -Wall -O2
+
 
 # try-cc
 # Usage: option = $(call try-cc, source-to-build, cc-options, msg)
@@ -108,6 +119,18 @@ ifndef NO_LIBELF
 $(UDIR)/symbol.o: $(UDIR)/symbol.c
 	$(QUIET_CC)$(CC) $(DEBUGINFO_FLAG) $(KTAPC_CFLAGS) -o $@ -c $<
 endif
+ifdef FFI
+KTAPC_CFLAGS += -DCONFIG_KTAP_FFI
+$(UDIR)/cdata.o: $(INTP)/ffi/cdata.c $(INC)/*
+	$(QUIET_CC)$(CC) $(DEBUGINFO_FLAG) $(KTAPC_CFLAGS) -o $@ -c $<
+$(UDIR)/ffi_type.o: $(INTP)/ffi/ffi_type.c $(INC)/*
+	$(QUIET_CC)$(CC) $(DEBUGINFO_FLAG) $(KTAPC_CFLAGS) -o $@ -c $<
+$(UDIR)/ffi/cparser.o: $(UDIR)/ffi/cparser.c $(INC)/*
+	$(QUIET_CC)$(CC) $(DEBUGINFO_FLAG) $(KTAPC_CFLAGS) -o $@ -c $<
+$(UDIR)/ffi/ctype.o: $(UDIR)/ffi/ctype.c $(INC)/*
+	$(QUIET_CC)$(CC) $(DEBUGINFO_FLAG) $(KTAPC_CFLAGS) -o $@ -c $<
+endif
+
 
 KTAPOBJS =
 KTAPOBJS += $(UDIR)/lex.o
@@ -124,6 +147,12 @@ KTAPOBJS += $(UDIR)/kp_str.o
 KTAPOBJS += $(UDIR)/kp_obj.o
 ifndef NO_LIBELF
 KTAPOBJS += $(UDIR)/symbol.o
+endif
+ifdef FFI
+KTAPOBJS += $(UDIR)/cdata.o
+KTAPOBJS += $(UDIR)/ffi_type.o
+KTAPOBJS += $(UDIR)/ffi/cparser.o
+KTAPOBJS += $(UDIR)/ffi/ctype.o
 endif
 
 ktap: $(KTAPOBJS)
