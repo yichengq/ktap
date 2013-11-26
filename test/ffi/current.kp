@@ -1,0 +1,2 @@
+curr = ffi.current()
+print("current task pointer:", curr)

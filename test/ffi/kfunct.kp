@@ -1,0 +1,8 @@
+cdef("unsigned long long sched_clock();")
+
+
+print("start of user script...")
+
+print("[*] try a registered C function...")
+ret = C.sched_clock()
+print("C function returned, value: ", ret)

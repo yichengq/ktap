@@ -1,0 +1,24 @@
+cdef("void funct_void();")
+cdef("int funct_int1(unsigned char a, char b, unsigned short c, short d);")
+cdef("long long funct_int2(unsigned int a, int b, unsigned long c, long d, unsigned long long e, long long f, long long g);")
+cdef("void *funct_pointer1(char *a);")
+
+
+print("start of user script...")
+
+print("[*] try funct_void...")
+ret = C.funct_void()
+print("C function returned, value: ", ret, ", should be nil")
+
+print("[*] try funct_int1...")
+ret = C.funct_int1(1111, 1111, 1111, 1111)
+print("C function returned, value: ", ret, ", should be 2396")
+
+print("[*] try funct_int2...")
+ret = C.funct_int2(90, 7800, 560000, 34000000, 1200000000, 900000000000, 78000000000000)
+print("C function returned, value: ", ret, ", should be 78901234567890")
+
+print("[*] try funct_pointer1...")
+ret = C.funct_pointer1("")
+print("C function returned, value: ", ret,
+		", should be around 0xffff8800--------")
