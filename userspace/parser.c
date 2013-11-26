@@ -30,6 +30,7 @@
 #include "../include/ktap_types.h"
 #include "../include/ktap_opcodes.h"
 #include "ktapc.h"
+#include "cparser.h"
 
 /* maximum number of local variables per function (must be smaller
    than 250, due to the bytecode format) */
@@ -1490,7 +1491,7 @@ static void forstat(ktap_lexstate *ls, int line)
 	case ',': case TK_IN:
 		forlist(ls, varname);
 		break;
-	default: 
+	default:
 		lex_syntaxerror(ls, KTAP_QL("=") " or " KTAP_QL("in") " expected");
 	}
 	//check_match(ls, TK_END, TK_FOR, line);
@@ -1797,6 +1798,48 @@ static void timerstat(ktap_lexstate *ls)
 	SETARG_C(getcode(fs, v), 1);  /* call statement uses no results */
 }
 
+#ifdef CONFIG_KTAP_FFI
+static void __parsecdef(ktap_lexstate *ls)
+{
+	ktap_mbuffer cdef_buf;
+	int len;
+
+	/* get rid of double qoutes */
+	len = strlen(mbuff(ls->buff));
+	mbuff_init(&cdef_buf);
+	mbuff_resize(&cdef_buf, len-1);
+	mbuff_reset(&cdef_buf);
+	strncpy(mbuff(&cdef_buf), mbuff(ls->buff)+1, len-2);
+	ffi_cdef(mbuff(&cdef_buf));
+	mbuff_free(&cdef_buf);
+}
+#else
+static void __parsecdef(ktap_lexstate *ls)
+{
+	printf("FFI disabled, ignoring cdef...\n");
+}
+#endif
+
+/* we still keep cdef keyword even FFI feature is disabled, it just does
+ * nothing and prints out a warning */
+static void parsecdef(ktap_lexstate *ls)
+{
+	/* skip " */
+	lex_next(ls);
+	/* read cdef string */
+	lex_next(ls);
+
+	if (ls->t.token != TK_STRING)
+		error_expected(ls, TK_STRING);
+
+	__parsecdef(ls);
+
+	/* consume ( */
+	lex_next(ls);
+	/* consume newline */
+	lex_next(ls);
+}
+
 static void statement(ktap_lexstate *ls)
 {
 	int line = ls->linenumber;  /* may be needed for error messages */
@@ -1865,6 +1908,9 @@ static void statement(ktap_lexstate *ls)
 	case TK_TICK:
 		timerstat(ls);
 		break;
+	case TK_FFI_CDEF:
+		parsecdef(ls);
+		break;
 	default: {  /* stat -> func | assignment */
 		exprstat(ls);
 		break;
@@ -1925,4 +1971,3 @@ ktap_closure *ktapc_parser(char *ptr, const char *name)
 	ktap_assert(dyd.actvar.n == 0 && dyd.gt.n == 0 && dyd.label.n == 0);
 	return cl;
 }
-

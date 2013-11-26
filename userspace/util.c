@@ -392,4 +392,3 @@ unsigned long find_kernel_symbol(const char *symbol)
 
 	return arg.addr;
 }
-
