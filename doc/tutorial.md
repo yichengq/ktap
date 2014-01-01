@@ -636,7 +636,7 @@ More examples can be found at [samples][samples_dir] directory.
 Here is the complete syntax of ktap in extended BNF.
 (based on lua syntax: http://www.lua.org/manual/5.1/manual.html#5.1)
 
-        chunk ::= {stat [';']} [laststat [';']
+        *chunk* ::= {stat ['**;**']} [laststat ['**;**']]
 
         block ::= chunk
 
